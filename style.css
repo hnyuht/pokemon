@@ -91,15 +91,15 @@ h1 {
   right: 0;
   bottom: 0;
   background-color: rgba(0,0,0,0.8);
-  display: none;  /* <-- key fix: modal hidden by default */
+  display: none;  /* <-- hidden by default */
   align-items: center;
   justify-content: center;
   z-index: 10;
-  animation: fadeIn 0.3s ease forwards; /* smooth fade-in */
+  animation: fadeIn 0.3s ease forwards;
 }
 
 .victory.show {
-  display: flex; /* show modal when .show class is added by JS */
+  display: flex; /* show modal when .show class is added */
 }
 
 @keyframes fadeIn {
