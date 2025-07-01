@@ -21,23 +21,35 @@ const startGame = function() {
         .then(pokedex => setPokemonArray(pokedex));
 };
 
-/* Set Gameboard with Unique Pairs */
-const setPokemonArray = function(pokedexArray) {
+/* Set Gameboard with Unique Pairs - FIXED for better shuffle */
+const setPokemonArray = async function(pokedexArray) {
     const pairCount = cardCount / 2;
     const usedIndexes = new Set();
-    const pokemonArray = [];
+    const selectedPokemon = [];
 
-    while (pokemonArray.length < pairCount) {
+    while (selectedPokemon.length < pairCount) {
         let num = randomPokemonId();
         if (!usedIndexes.has(num)) {
             usedIndexes.add(num);
-            let pokemon = pokedexArray.results[num];
-            pokemonArray.push(pokemon);
+            selectedPokemon.push(pokedexArray.results[num]);
         }
     }
 
-    const gameArray = shuffleGame([...pokemonArray, ...pokemonArray]);
-    fillGameBoard(gameArray);
+    const fullDeck = [...selectedPokemon, ...selectedPokemon];
+    const shuffledDeck = shuffleGame(fullDeck);
+
+    // Fetch all Pokémon details before rendering
+    const detailedPokemon = await Promise.all(shuffledDeck.map(p =>
+        fetch(p.url).then(res => res.json())
+    ));
+
+    renderFullDeck(detailedPokemon);
+};
+
+/* Render all cards at once after full shuffle and fetch */
+const renderFullDeck = function(detailedPokemonArray) {
+    gameBoard.innerHTML = ""; // Clear board
+    detailedPokemonArray.forEach(pokemon => renderCards(pokemon));
 };
 
 /* Random number generator */
@@ -54,19 +66,6 @@ const shuffleGame = function(array) {
         array[randomIndex] = temporaryValue;
     }
     return array;
-};
-
-/* Fill Game Board */
-const fillGameBoard = function(gameArray) {
-    let gameDeck = shuffleGame(gameArray);
-    gameDeck.forEach(pokemon => fillPokedex(pokemon));
-};
-
-/* Get Pokémon details for card front */
-const fillPokedex = (pokemon) => {
-    fetch(pokemon.url)    
-        .then(response => response.json())
-        .then(pokemon => renderCards(pokemon));
 };
 
 /* Render a single card */
