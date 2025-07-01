@@ -317,20 +317,54 @@ const liftUp = function() { this.style.transform = "translateY(-2px)"; };
 const putDown = function() { this.style.transform = ""; };
 
 /* Audio Mute/Unmute Logic */
-const bgmAudio = document.getElementById("bgm");
-const audioToggle = document.getElementById("audio-toggle");
+document.addEventListener("DOMContentLoaded", () => {
+    const bgmAudio = document.getElementById("bgm");
+    const audioToggle = document.getElementById("audio-toggle");
 
-if (bgmAudio && audioToggle) {
-    audioToggle.addEventListener("click", () => {
-        if (bgmAudio.muted) {
-            bgmAudio.muted = false;
-            audioToggle.textContent = "🔊 Mute";
-        } else {
-            bgmAudio.muted = true;
+    if (!bgmAudio || !audioToggle) return;
+
+    // Start paused (muted false), wait for user interaction
+    bgmAudio.pause();
+    bgmAudio.muted = false;
+
+    let audioPlaying = false;
+
+    function toggleAudio() {
+        if (!audioPlaying) {
+            bgmAudio.play().catch(() => {});
+            audioPlaying = true;
             audioToggle.textContent = "🔇 Unmute";
+            audioToggle.setAttribute("aria-pressed", "true");
+        } else {
+            if (bgmAudio.muted) {
+                bgmAudio.muted = false;
+                audioToggle.textContent = "🔇 Unmute";
+                audioToggle.setAttribute("aria-pressed", "true");
+            } else {
+                bgmAudio.muted = true;
+                audioToggle.textContent = "🔊 Mute";
+                audioToggle.setAttribute("aria-pressed", "false");
+            }
         }
+    }
+
+    // On first user interaction anywhere, start audio if not playing
+    function startAudioOnFirstInteraction() {
+        if (!audioPlaying) {
+            bgmAudio.play().catch(() => {});
+            audioPlaying = true;
+            audioToggle.textContent = "🔇 Unmute";
+            audioToggle.setAttribute("aria-pressed", "true");
+        }
+        document.removeEventListener("click", startAudioOnFirstInteraction);
+    }
+
+    document.addEventListener("click", startAudioOnFirstInteraction);
+    audioToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleAudio();
     });
-}
+});
 
 /* Event Listeners */
 modalRestartBall.addEventListener("click", restartGame);
