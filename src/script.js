@@ -317,6 +317,22 @@ document.addEventListener("click", (e) => {
 const liftUp = function() { this.style.transform = "translateY(-2px)"; };
 const putDown = function() { this.style.transform = ""; };
 
+/* Audio Mute/Unmute Logic */
+const bgmAudio = document.getElementById("bgm");
+const audioToggle = document.getElementById("audio-toggle");
+
+if (bgmAudio && audioToggle) {
+    audioToggle.addEventListener("click", () => {
+        if (bgmAudio.muted) {
+            bgmAudio.muted = false;
+            audioToggle.textContent = "🔊 Mute";
+        } else {
+            bgmAudio.muted = true;
+            audioToggle.textContent = "🔇 Unmute";
+        }
+    });
+}
+
 /* Event Listeners */
 modalRestartBall.addEventListener("click", restartGame);
 restartPokeball.addEventListener("click", restartGame);
