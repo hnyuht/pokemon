@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokémon Matching Game</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Pokémon Memory Matching Game</h1>
+  
+  <div class="game-settings">
+    <label for="difficulty">Difficulty:</label>
+    <select id="difficulty">
+      <option value="8">Easy (4 pairs)</option>
+      <option value="16" selected>Medium (8 pairs)</option>
+      <option value="24">Hard (12 pairs)</option>
+      <option value="32">Very Hard (16 pairs)</option>
+    </select>
+
+    <label for="timer">Time Limit (seconds):</label>
+    <input type="number" id="timer" value="120" min="30" max="600">
+    
+    <button id="startButton">Start Game</button>
+  </div>
+
+  <div class="game-info">
+    <span class="gameTimer"></span>
+    <span id="wrongCount"></span>
+    <span class="turnCount"></span>
+    <span class="scoreCount"></span>
+  </div>
+
+  <div class="gameBoard"></div>
+
+  <div class="victory" style="display:none;">
+    <div class="victory-content">
+      <span class="close">&times;</span>
+      <p class="victory-message"></p>
+      <form class="submit-highscore-form">
+        <input type="text" name="name" placeholder="Your name" required>
+        <button type="submit">Submit High Score</button>
+      </form>
+    </div>
+  </div>
+
+  <h2>High Scores</h2>
+  <ul class="highscore-list"></ul>
+  <button class="reset-scores">Reset Highscores</button>
+
+  <button class="restart">Restart</button>
+  <button class="restart-modal">Restart from Modal</button>
+
+  <script src="script.js"></script>
+</body>
+</html>
