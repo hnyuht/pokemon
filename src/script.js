@@ -1,31 +1,47 @@
-/*  variable to have the Base URL for the fetch - prevent typos!     */
+/*  Base URL for PokeAPI  */
 const BASEURL = "https://pokeapi.co/api/v2/pokemon?limit=151";
 
-// CONFIGURABLE number of pairs
-let PAIRS_COUNT = 20;  // Change this number to control number of unique pairs (total cards = PAIRS_COUNT * 2)
+/* Track how many cards the player wants */
+let cardCount = 40; // Default, matches your index.html selected option
 
-// Start of Game - housekeeping function to tidy game state, GET initial pokemon for the gameboard.
+// Grab the card-count dropdown
+const cardCountSelector = document.getElementById("card-count");
+if (cardCountSelector) {
+    cardCountSelector.addEventListener("change", (e) => {
+        cardCount = parseInt(e.target.value, 10);
+        restartGame();
+    });
+}
+
+/* Start Game */
 const startGame = function() {
     housekeeping();
     fetch(BASEURL)
-    .then(response => response.json())
-    .then(pokedex => setPokemonArray(pokedex))
-}
+        .then(response => response.json())
+        .then(pokedex => setPokemonArray(pokedex));
+};
 
-// Set Gameboard size and array
+/* Set Gameboard with Unique Pairs */
 const setPokemonArray = function(pokedexArray) {
+    const pairCount = cardCount / 2;
+    const usedIndexes = new Set();
     const pokemonArray = [];
-    for (let i = 0; i < PAIRS_COUNT; i++) {
-        let num = randomPokemonId();
-        let pokemon = pokedexArray.results[num];
-        pokemonArray.push(pokemon)
-    }
-    const gameArray = [...pokemonArray, ...pokemonArray];  
-    fillGameBoard(gameArray)
-}
 
-/* get random number function for the gameBoard cards */
-let randomPokemonId = () => Math.floor(Math.random() * 151)
+    while (pokemonArray.length < pairCount) {
+        let num = randomPokemonId();
+        if (!usedIndexes.has(num)) {
+            usedIndexes.add(num);
+            let pokemon = pokedexArray.results[num];
+            pokemonArray.push(pokemon);
+        }
+    }
+
+    const gameArray = shuffleGame([...pokemonArray, ...pokemonArray]);
+    fillGameBoard(gameArray);
+};
+
+/* Random number generator */
+const randomPokemonId = () => Math.floor(Math.random() * 151);
 
 /* Fisher-Yates shuffle */
 const shuffleGame = function(array) {
@@ -40,227 +56,214 @@ const shuffleGame = function(array) {
     return array;
 };
 
-// shuffle and fill game board
+/* Fill Game Board */
 const fillGameBoard = function(gameArray) {
-    let gameDeck = shuffleGame(shuffleGame(gameArray));
-    gameDeck.forEach(pokemon => fillPokedex(pokemon))
-}
+    let gameDeck = shuffleGame(gameArray);
+    gameDeck.forEach(pokemon => fillPokedex(pokemon));
+};
 
-// GET specific pokemon details to render card
+/* Get Pokémon details for card front */
 const fillPokedex = (pokemon) => {
     fetch(pokemon.url)    
-    .then(response => response.json())
-    .then(pokemon => renderCards(pokemon)) 
-}
+        .then(response => response.json())
+        .then(pokemon => renderCards(pokemon));
+};
 
+/* Render a single card */
 const gameBoard = document.querySelector(".gameBoard");
 const renderCards = function(pokedex) {
-    const createCard = document.createElement("div")
-    createCard.className = "card"
-    createCard.dataset.face = "down"
-    createCard.addEventListener("click", cardflip)
-    createCard.addEventListener("click", checkForWinCondition)
+    const createCard = document.createElement("div");
+    createCard.className = "card";
+    createCard.dataset.face = "down";
+    createCard.addEventListener("click", cardflip);
+    createCard.addEventListener("click", checkForWinCondition);
 
-    const createCardFront = document.createElement("div")
-    createCardFront.className = "card-front"
-    createCardFront.dataset.dexid = pokedex.id
-    createCardFront.style.display = "none"
+    const createCardFront = document.createElement("div");
+    createCardFront.className = "card-front";
+    createCardFront.dataset.dexid = pokedex.id;
+    createCardFront.style.display = "none";
 
-    const cardImage = document.createElement("img")
-    cardImage.className = "card-image"
-    cardImage.src = pokedex.sprites.other[`official-artwork`].front_default        
-    createCardFront.appendChild(cardImage)
+    const cardImage = document.createElement("img");
+    cardImage.className = "card-image";
+    cardImage.src = pokedex.sprites.other[`official-artwork`].front_default;
+    createCardFront.appendChild(cardImage);
 
-    const cardHeader = document.createElement("h2")
-    cardHeader.innerText = `${pokedex.species.name}`                 
-    createCardFront.appendChild(cardHeader)
+    const cardHeader = document.createElement("h2");
+    cardHeader.innerText = pokedex.species.name;
+    createCardFront.appendChild(cardHeader);
 
-    const createCardBack = document.createElement("div")
-    createCardBack.className = "card-back"
-    createCardBack.style.display = "block"
-    createCardBack.addEventListener("mouseover", liftUp)
-    createCardBack.addEventListener("mouseout", putDown)
+    const createCardBack = document.createElement("div");
+    createCardBack.className = "card-back";
+    createCardBack.style.display = "block";
+    createCardBack.addEventListener("mouseover", liftUp);
+    createCardBack.addEventListener("mouseout", putDown);
 
-    const cardBackImg = document.createElement("img")
-    cardBackImg.className = "card-back"
-    cardBackImg.src = "assets/cardBack.png"
-    createCardBack.appendChild(cardBackImg)
+    const cardBackImg = document.createElement("img");
+    cardBackImg.className = "card-back";
+    cardBackImg.src = "assets/cardBack.png";
+    createCardBack.appendChild(cardBackImg);
 
     createCard.appendChild(createCardFront);
     createCard.appendChild(createCardBack);
-    gameBoard.appendChild(createCard)
+    gameBoard.appendChild(createCard);
 };
 
-// cardflip function 
+/* Card Flip Logic */
 const cardflip = function() {
     if (this.dataset.face === "down") {
-        this.dataset.face = "up"
-        this.firstChild.style.display = "block"
-        this.lastChild.style.display = "none"
-        this.classList.toggle("disabled")
-        cardBecomesActive(this)
-    } 
-}
+        this.dataset.face = "up";
+        this.firstChild.style.display = "block";
+        this.lastChild.style.display = "none";
+        this.classList.toggle("disabled");
+        cardBecomesActive(this);
+    }
+};
 
-// turn counter
-let turns = 0
-let activeCards = []; 
+let turns = 0;
+let activeCards = [];
 
-// active card function
 const cardBecomesActive = function(card) {
     activeCards.push(card);
     let length = activeCards.length;
-    if (length === 1 && turns === 0){
+    if (length === 1 && turns === 0) {
         startCounter();
         startTimer();
     }    
     if (length === 2) {
-        turns ++;
+        turns++;
         turncount.innerText = turns;
-        if(activeCards[0].firstChild.dataset.dexid === activeCards[1].firstChild.dataset.dexid) {
+        if (activeCards[0].firstChild.dataset.dexid === activeCards[1].firstChild.dataset.dexid) {
             disableBoard();
-            activeCards.forEach(card => card.style.backgroundImage = "radial-gradient(rgb(241, 241, 216), rgb(241, 245, 35))")
-            activeCards.forEach(card => card.classList.toggle("match"))
-            setTimeout(function(){
-                activeCards.forEach(card => card.style.backgroundImage = "")
+            activeCards.forEach(card => {
+                card.style.backgroundImage = "radial-gradient(rgb(241, 241, 216), rgb(241, 245, 35))";
+                card.classList.add("match");
+            });
+            setTimeout(() => {
+                activeCards.forEach(card => card.style.backgroundImage = "");
                 activeCards = [];
                 enableBoard();
-            }, 1200)            
+            }, 1200);
         } else {
             disableBoard();
-            setTimeout(function(){
-                activeCards.forEach(card => cardReset(card));
+            setTimeout(() => {
+                activeCards.forEach(cardReset);
                 activeCards = [];
                 enableBoard();
             }, 1200);
         }
     }
-}
+};
 
-// cardReset Function resets the cards and removes disabled state
 const cardReset = function(card) {
-    card.dataset.face = "down"
-    card.lastChild.style.display = "block"
-    card.firstChild.style.display = "none"
-    card.classList.toggle("disabled") 
-}
+    card.dataset.face = "down";
+    card.lastChild.style.display = "block";
+    card.firstChild.style.display = "none";
+    card.classList.toggle("disabled");
+};
 
-// disables the board so you can't click extra cards 
-const disableBoard = function() {
-    gameBoard.classList.toggle("disabled")
-}
+const disableBoard = () => gameBoard.classList.add("disabled");
+const enableBoard = () => gameBoard.classList.remove("disabled");
 
-// enables the board so you can click extra cards again
-const enableBoard = function() {
-    gameBoard.classList.toggle("disabled")
-}
-
-const restartPokeball = document.querySelector(".restart")
-const modalRestartBall = document.querySelector(".restart-modal")
-
-// restart function
+const restartPokeball = document.querySelector(".restart");
+const modalRestartBall = document.querySelector(".restart-modal");
 const restartGame = function() {
     gameBoard.innerHTML = "";
     startGame();
-}
+};
 
-// Housekeeping
-const housekeeping = function(){
-    clearInterval(clockTimer)
-    clearInterval(scoreCounter)
+const housekeeping = function() {
+    clearInterval(clockTimer);
+    clearInterval(scoreCounter);
     closeVictoryWindow();         
-    turns = 0, second = 0, minute = 0, hour = 0, counter = 0
-    displayTimer()
+    turns = 0; 
+    second = 0; 
+    minute = 0; 
+    hour = 0; 
+    counter = 0;
+    displayTimer();
     turncount.innerText = turns;
-    scoreCount.innerHTML = 0
-    getHighScores()
-}
+    scoreCount.innerHTML = 0;
+    getHighScores();
+};
 
-const cards = document.getElementsByClassName("match")
-const closeVictoryModal = document.querySelector(".close")
+const cards = document.getElementsByClassName("match");
+const closeVictoryModal = document.querySelector(".close");
 const victoryModal = document.querySelector(".victory");
-const victoryMessage = document.querySelector(".victory-message")
-let finalScore = 0
-let finalTime = 0
+const victoryMessage = document.querySelector(".victory-message");
+let finalScore = 0;
+let finalTime = 0;
 
 const checkForWinCondition = function() {
-    if(cards.length === PAIRS_COUNT * 2) {
-        clearInterval(clockTimer)
-        clearInterval(scoreCounter)
-        finalTime = gameTimer.innerHTML
-        finalScore = scoreCount.innerHTML
-        setTimeout(function(){
-        victoryMessage.innerHTML = `Congratulations! You took <strong>${turns}</strong> turns to match 'em all!<br/>
+    if (cards.length === cardCount) {
+        clearInterval(clockTimer);
+        clearInterval(scoreCounter);
+        finalTime = gameTimer.innerHTML;
+        finalScore = scoreCount.innerHTML;
+        setTimeout(() => {
+            victoryMessage.innerHTML = `Congratulations! You took <strong>${turns}</strong> turns to match 'em all!<br/>
                                         It took you <strong>${finalTime}</strong>.<br/>
-                                        You earned ₽<strong>${finalScore}</strong>! ` ;
-        victoryModal.style.display = "block";
-        }, 600)
+                                        You earned ₽<strong>${finalScore}</strong>!`;
+            victoryModal.style.display = "block";
+        }, 600);
     }
-}
+};
 
-// gameplay features
-const turncount = document.querySelector(".turnCount")
-const gameTimer = document.querySelector(".gameTimer")
+/* Gameplay UI */
+const turncount = document.querySelector(".turnCount");
+const gameTimer = document.querySelector(".gameTimer");
 let second = 0, minute = 0, hour = 0;
-const displayTimer = () => gameTimer.innerHTML = `${hour} hrs : ${minute} mins : ${second} secs`
+const displayTimer = () => gameTimer.innerHTML = `${hour} hrs : ${minute} mins : ${second} secs`;
 let clockTimer;
-const startTimer = function(){
-    clockTimer = setInterval(function(){
-        displayTimer()
+const startTimer = function() {
+    clockTimer = setInterval(() => {
+        displayTimer();
         second++;
-        if(second === 60){
+        if (second === 60) {
             minute++;
             second = 0;
         }
-        if(minute === 60){
+        if (minute === 60) {
             hour++;
             minute = 0;
         }
     }, 1000);
-}
+};
 
-const scoreCount = document.querySelector(".scoreCount")
-let counter = 0
-let pointsScored
-let scoreCounter
-const startCounter = function(){
-    scoreCounter = setInterval(function(){
+/* Score Counter */
+const scoreCount = document.querySelector(".scoreCount");
+let counter = 0;
+let pointsScored;
+let scoreCounter;
+const startCounter = function() {
+    scoreCounter = setInterval(() => {
         counter++;
         pointsScored = 1000 - (turns * counter);
-        if (pointsScored < 0) {
-            scoreCount.innerHTML = `0`
-        } else {
-            scoreCount.innerHTML = `${pointsScored}`
-        }
+        scoreCount.innerHTML = pointsScored < 0 ? `0` : `${pointsScored}`;
     }, 1000);
-}
+};
 
-/* ************************************************************ */
-/* To get High Scores to work run "json-server --watch db.json" */
-/* ************************************************************ */
-
-const highScoreList = document.querySelector(".highscore-list")
+/* High Scores API */
+const HIGHSCOREURL = "http://localhost:3000/highscores/";
+const highScoreList = document.querySelector(".highscore-list");
 let highScores = [];
 
-const scoreArrayMaker = function(highscoreArray) { 
+const scoreArrayMaker = function(highscoreArray) {
     highScoreList.innerHTML = "";
-    let tempArray = highscoreArray.sort((a, b) => b.score - a.score)
-    highScores = tempArray.slice(0, 10)
-    highScores.forEach(highscore => scoreLister(highscore));
-}
+    highScores = highscoreArray.sort((a, b) => b.score - a.score).slice(0, 10);
+    highScores.forEach(scoreLister);
+};
 
-const scoreLister = function(highscore){
-    const li = document.createElement("li")
-    li.innerText = `${highscore.name} earned ₽${highscore.score} and took a mere ${highscore.goes} turns to match 'em all!`;
+const scoreLister = function(highscore) {
+    const li = document.createElement("li");
+    li.innerText = `${highscore.name} earned ₽${highscore.score} and took ${highscore.goes} turns!`;
     highScoreList.appendChild(li);
-}
+};
 
-const HIGHSCOREURL = "http://localhost:3000/highscores/"
-const hsName = document.querySelector(".submit-highscore-form input[name='name']")
-const hsSubmit = document.querySelector(".submit-highscore-form")
+const hsName = document.querySelector(".submit-highscore-form input[name='name']");
+const hsSubmit = document.querySelector(".submit-highscore-form");
 
-const userSubmitHighScore = function(){
-    highScores.push({name: hsName.value, goes: turns, score: parseInt(finalScore, 10)})
+const userSubmitHighScore = function() {
+    highScores.push({name: hsName.value, goes: turns, score: parseInt(finalScore, 10)});
     fetch(HIGHSCOREURL, {
         method: "POST",
         headers: {
@@ -272,62 +275,49 @@ const userSubmitHighScore = function(){
             "goes": turns,
             "score": parseInt(finalScore, 10),
         })
-    })
-    .catch(error => console.log(error.message))
-}
+    }).catch(error => console.log(error.message));
+};
 
-const getHighScores = function(){
+const getHighScores = function() {
     fetch(HIGHSCOREURL)
-    .then(response => response.json())
-    .then(highscores => scoreArrayMaker(highscores))
-    .catch(() => highScoreList.innerHTML = "Currently unavailable - please start the highscore server!")
-}
+        .then(response => response.json())
+        .then(scoreArrayMaker)
+        .catch(() => highScoreList.innerHTML = "Currently unavailable - please start the highscore server!");
+};
 
-hsSubmit.addEventListener("submit", function(event){
+hsSubmit.addEventListener("submit", function(event) {
     event.preventDefault();
     userSubmitHighScore();
     scoreArrayMaker(highScores);
     closeVictoryWindow();
     event.target.reset();
-})
+});
 
 const resetHighscores = () => {
     highScoreList.innerHTML = "";
     highScores = [];
     fetch(HIGHSCOREURL)
-    .then(response => response.json())
-    .then(scores => scores.forEach(score => fetch(`http://localhost:3000/highscores/${score.id}`, {method: "DELETE"})))
-}
+        .then(response => response.json())
+        .then(scores => scores.forEach(score =>
+            fetch(`${HIGHSCOREURL}${score.id}`, {method: "DELETE"})
+        ));
+};
 
-const hsResetBtn = document.querySelector(".reset-scores")
-hsResetBtn.addEventListener("click", resetHighscores)
+const hsResetBtn = document.querySelector(".reset-scores");
+hsResetBtn.addEventListener("click", resetHighscores);
 
-const closeVictoryWindow = () => victoryModal.style.display = "none"   
-closeVictoryModal.addEventListener("click", closeVictoryWindow)
-document.addEventListener("click", function(e){
-    if (e.target === victoryModal) {
-       closeVictoryWindow()
-    }
-})
+/* Modal helpers */
+const closeVictoryWindow = () => victoryModal.style.display = "none";
+closeVictoryModal.addEventListener("click", closeVictoryWindow);
+document.addEventListener("click", (e) => {
+    if (e.target === victoryModal) closeVictoryWindow();
+});
 
-const liftUp = function() {
-    this.style.transform = "translateY(-2px)";
-}
-const putDown = function() {
-    this.style.transform = "";
-}
+/* Card hover effects */
+const liftUp = function() { this.style.transform = "translateY(-2px)"; };
+const putDown = function() { this.style.transform = ""; };
 
-/* EventListener for modal restart button           */
+/* Event Listeners */
 modalRestartBall.addEventListener("click", restartGame);
-
-/* Event Listener to get functioning Restart button */
 restartPokeball.addEventListener("click", restartGame);
-
-/* DOM loaded event listener to arrange game assets on load */
 document.addEventListener("DOMContentLoaded", startGame);
-
-/* OPTIONAL: runtime setter to change pairs and restart game */
-const setPairsCount = (newCount) => {
-    PAIRS_COUNT = newCount;
-    restartGame();
-}
