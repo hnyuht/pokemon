@@ -323,47 +323,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!bgmAudio || !audioToggle) return;
 
-    // Start paused (muted false), wait for user interaction
+    // Start muted and paused to satisfy browser autoplay policies
+    bgmAudio.muted = true;
     bgmAudio.pause();
-    bgmAudio.muted = false;
 
-    let audioPlaying = false;
+    let audioStarted = false;
 
-    function toggleAudio() {
-        if (!audioPlaying) {
-            bgmAudio.play().catch(() => {});
-            audioPlaying = true;
+    function updateAudioButton() {
+        if (bgmAudio.muted) {
             audioToggle.textContent = "🔇 Unmute";
             audioToggle.setAttribute("aria-pressed", "true");
         } else {
-            if (bgmAudio.muted) {
-                bgmAudio.muted = false;
-                audioToggle.textContent = "🔇 Unmute";
-                audioToggle.setAttribute("aria-pressed", "true");
-            } else {
-                bgmAudio.muted = true;
-                audioToggle.textContent = "🔊 Mute";
-                audioToggle.setAttribute("aria-pressed", "false");
-            }
+            audioToggle.textContent = "🔊 Mute";
+            audioToggle.setAttribute("aria-pressed", "false");
         }
     }
 
-    // On first user interaction anywhere, start audio if not playing
+    // Play audio on first user interaction anywhere
     function startAudioOnFirstInteraction() {
-        if (!audioPlaying) {
+        if (!audioStarted) {
             bgmAudio.play().catch(() => {});
-            audioPlaying = true;
-            audioToggle.textContent = "🔇 Unmute";
-            audioToggle.setAttribute("aria-pressed", "true");
+            audioStarted = true;
+            bgmAudio.muted = false; // Unmute on first play
+            updateAudioButton();
         }
         document.removeEventListener("click", startAudioOnFirstInteraction);
     }
+    document.addEventListener("click", startAudioOnFirstInteraction, { once: true });
 
-    document.addEventListener("click", startAudioOnFirstInteraction);
+    // Toggle mute/unmute on button click
     audioToggle.addEventListener("click", (e) => {
         e.stopPropagation();
-        toggleAudio();
+        bgmAudio.muted = !bgmAudio.muted;
+        updateAudioButton();
     });
+
+    updateAudioButton();
 });
 
 /* Event Listeners */
