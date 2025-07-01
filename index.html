@@ -4,50 +4,48 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gotta match 'em all!</title> <!-- need a better title -->
+    <title>Pokémon Memory Match Game</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="icon" href="./assets/pokeball.png" type="image/x-icon" />
     <script src="src/script.js" defer></script>
 </head>
 <body>
-    <div class="game-container">
+    <div class="game-container"> 
         <div id="start">
             <img src="assets/pokemonMatchGameLogo.png" alt="Game Logo" />
-            <p>
+            <p> 
                 Welcome to Celadon Game Corner in Celadon City! <br />
                 Pick a pair, see if they match. <br />
-                Click the Pokeball to start again.
+                Click the Pokéball to restart the game.
             </p>
-            <img src="assets/pokeball.png" class="restart" alt="Restart Game" />
+            <div>
+                <label for="card-count">Cards:</label>
+                <select id="card-count">
+                    <option value="16">16 Cards</option>
+                    <option value="20">20 Cards</option>
+                    <option value="40" selected>40 Cards</option>
+                </select>
+                <img src="assets/pokeball.png" class="restart" alt="Restart Game" />
+            </div>
         </div>
 
         <div class="gameBoard">
-            <!-- cards to be created here -->
-        </div>
+            <!-- Cards created dynamically -->
+        </div>  
 
         <div class="victory">
             <div class="victory-content">
-                <span class="close">X</span>
+                <span class="close" title="Close">X</span>    
                 <p><span class="victory-message"></span></p>
                 <div class="modal-restart">
-                    <p>Want to battle again? Click the Pokeball to try again.</p>
-                    <img src="assets/pokeball.png" class="restart-modal" alt="Restart Modal" />
+                    <p>Want to battle again? Click the Pokéball to try again.</p>
+                    <img src="assets/pokeball.png" class="restart-modal" alt="Restart from Modal" />
                 </div>
                 <form class="submit-highscore-form">
-                    <h3>Want to see if you made it to the high scores?</h3>
-                    <input
-                        type="text"
-                        name="name"
-                        value=""
-                        placeholder="Enter name..."
-                        class="highscore-name"
-                    /><br />
-                    <input
-                        type="submit"
-                        name="submit"
-                        value="Submit High Score!"
-                        class="highscore-submit"
-                    />
+                    <h3>Made it to the high scores?</h3>
+                    <input type="text" name="name" placeholder="Enter your name..." class="highscore-name" required />
+                    <br />
+                    <input type="submit" name="submit" value="Submit High Score!" class="highscore-submit" />
                 </form>
             </div>
         </div>
@@ -56,41 +54,21 @@
     <div class="side-container">
         <div class="gameplay-container">
             <ul class="gameplay-elements">
-                <li>
-                    Turns: <strong><span class="turnCount">0</span></strong>
-                </li>
-                <li>
-                    Timer: <strong><span class="gameTimer">Set timer and press Start</span></strong>
-                </li>
-                <li>
-                    Money: ₽<strong><span class="scoreCount">0</span></strong>
-                </li>
-                <li>
-                    Tries Left: <strong><span class="triesCount">5</span></strong>
-                </li>
+                <li>Turns: <strong><span class="turnCount">0</span></strong></li>
+                <li>Timer: <strong><span class="gameTimer">0 hrs : 0 mins : 0 secs</span></strong></li>
+                <li>Money: ₽<strong><span class="scoreCount">0</span></strong></li>
             </ul>
-            <label for="timerInput">Set Timer (seconds):</label>
-            <input
-                id="timerInput"
-                type="number"
-                min="10"
-                max="600"
-                value="180"
-                step="10"
-                aria-label="Set timer in seconds"
-            />
-            <button id="startButton">Start Game</button>
         </div>
 
         <div class="highscores">
-            <h2>Top 10 High Scores!</h2>
+            <h2>Top 10 High Scores</h2>
             <ul class="highscore-list"></ul>
             <button class="reset-scores">Reset High Scores</button>
-        </div>
+        </div>    
 
         <div class="comments">
-            <!-- Potential feature lets see if I can get highscores done first! -->
+            <!-- Placeholder for future comments or features -->
         </div>
-    </div>
+    </div>  
 </body>
 </html>
